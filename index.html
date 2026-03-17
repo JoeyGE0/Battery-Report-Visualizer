@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battery Discharge Report</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bw-print">
+    <div class="container">
+        <!-- Settings Panel -->
+        <div class="settings-panel" id="settingsPanel">
+            <h3>Report Settings</h3>
+            <div class="settings-grid">
+                <div class="setting-group">
+                    <label for="businessName">Business Name</label>
+                    <input type="text" id="businessName" placeholder="Your Shop Name">
+                </div>
+                <div class="setting-group">
+                    <label for="logoUpload">Logo</label>
+                    <div class="logo-upload-wrapper">
+                        <input type="file" id="logoUpload" accept="image/*" hidden>
+                        <button type="button" class="logo-upload-btn" id="logoUploadBtn">Choose Image</button>
+                        <button type="button" class="logo-clear-btn" id="logoClearBtn" style="display: none;">✕</button>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label for="serialNumber">S/N or Reference</label>
+                    <input type="text" id="serialNumber" placeholder="e.g. BAT-2024-001">
+                </div>
+                <div class="setting-group">
+                    <label for="clientName">Client Name</label>
+                    <input type="text" id="clientName" placeholder="Customer name">
+                </div>
+                <div class="setting-group">
+                    <label for="vehicleInfo">Battery/Vehicle Info</label>
+                    <input type="text" id="vehicleInfo" placeholder="e.g. 72V 40Ah, Scooter Model">
+                </div>
+                <div class="setting-group full-width">
+                    <label for="notes">Notes</label>
+                    <input type="text" id="notes" placeholder="Additional notes for the report">
+                </div>
+                <div class="setting-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="bwPrint" checked>
+                        B&W Print Mode (greyscale charts)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Zone -->
+        <div class="upload-zone" id="uploadZone">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <h3>Drop CSV file here</h3>
+            <p>or click to browse • ATORCH BW600w-dk format</p>
+            <input type="file" id="fileInput" accept=".csv" hidden>
+        </div>
+
+        <!-- Report -->
+        <div class="report" id="report">
+            <!-- Header -->
+            <div class="report-header">
+                <div class="brand">
+                    <img id="brandLogo" class="brand-logo" src="" alt="" style="display: none;">
+                    <div class="brand-icon" id="brandIcon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <h1 id="reportTitle">Battery Report</h1>
+                        <p>Discharge Test Results</p>
+                    </div>
+                </div>
+                <div class="report-meta">
+                    <div class="serial" id="reportSerial">--</div>
+                    <div class="date" id="testDate">--</div>
+                    <div class="date" id="testDuration">Duration: --</div>
+                </div>
+            </div>
+
+            <!-- Client/Vehicle Info Bar -->
+            <div class="info-bar" id="infoBar" style="display: none;">
+                <span id="infoClient"></span>
+                <span id="infoVehicle"></span>
+                <span id="infoNotes"></span>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-section">
+                <h2>Test Summary</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Start Voltage</div>
+                        <div class="stat-value" id="startVoltage">--<span class="stat-unit">V</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">End Voltage</div>
+                        <div class="stat-value" id="endVoltage">--<span class="stat-unit">V</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Energy Discharged</div>
+                        <div class="stat-value" id="totalEnergy">--<span class="stat-unit">Wh</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Capacity Discharged</div>
+                        <div class="stat-value" id="totalCapacity">--<span class="stat-unit">Ah</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Avg. Discharge Current</div>
+                        <div class="stat-value" id="avgCurrent">--<span class="stat-unit">A</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Avg. Power</div>
+                        <div class="stat-value" id="avgPower">--<span class="stat-unit">W</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Avg. Resistance</div>
+                        <div class="stat-value" id="avgResistance">--<span class="stat-unit">Ω</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Peak Battery Temp</div>
+                        <div class="stat-value" id="peakNtcTemp">--<span class="stat-unit">°C</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Peak MOS Temp</div>
+                        <div class="stat-value" id="peakMosTemp">--<span class="stat-unit">°C</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Peak CPU Temp</div>
+                        <div class="stat-value" id="peakCpuTemp">--<span class="stat-unit">°C</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voltage Graph -->
+            <div class="graph-section">
+                <h2>Voltage vs. Amp-Hours</h2>
+                <div class="graph-container" id="voltageGraphContainer">
+                    <canvas id="voltageChart"></canvas>
+                    <div class="graph-placeholder" id="voltagePlaceholder">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                        </svg>
+                        <p>Upload CSV to render graph</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resistance Graph -->
+            <div class="graph-section">
+                <h2>Resistance vs. Amp-Hours</h2>
+                <div class="graph-container" id="resistanceGraphContainer">
+                    <canvas id="resistanceChart"></canvas>
+                    <div class="graph-placeholder" id="resistancePlaceholder">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                        </svg>
+                        <p>Upload CSV to render graph</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temperature Graph -->
+            <div class="graph-section">
+                <h2>Temperature vs. Time</h2>
+                <div class="graph-container" id="tempGraphContainer">
+                    <canvas id="tempChart"></canvas>
+                    <div class="graph-placeholder" id="tempPlaceholder">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                        </svg>
+                        <p>Upload CSV to render graph</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn" onclick="printReport()">Print Report</button>
+            <button class="btn btn-primary" id="resetBtn" style="display: none;" onclick="resetReport()">Load New
+                File</button>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            Battery Discharge Report Generator • v0.2
+        </div>
+    </div>
+
+    <!-- Print-only footer -->
+    <div class="print-footer">
+        <span>Discharge Test Results</span>
+        <span class="print-date" id="printDate"></span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
